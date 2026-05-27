@@ -9,6 +9,7 @@ export default async function buscaPais(nome) {
         }
 
         const data = await response.json();
+        return data;
         console.log(data);
     } catch(error) {
         console.error(error);
