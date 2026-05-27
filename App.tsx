@@ -1,6 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import buscaPais from './Api';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { buscaPais, buscaCapital } from './Api';
 import { useState } from 'react';
 
 interface Pais{
@@ -13,11 +13,11 @@ interface Pais{
 export default function App() {
   const [pais, setPais] = useState('');
   const [dadosPais, setDadosPais] = useState<Pais | null>(null);
-  const [erro, setErro] = useState(false);
+  const [erro, setErro] = useState('');
 
   async function criarPais() {
     if (!pais) {
-      setErro(true);
+      setErro('Campo vazio');
       setDadosPais(null);
       return;
     }
@@ -26,7 +26,7 @@ export default function App() {
 
     if(!data || data.length === 0){
       setDadosPais(null);
-      setErro(true);
+      setErro('País não encontrado');
       return;
     }
 
@@ -37,7 +37,7 @@ export default function App() {
       fotoPais: data[0].maps.openStreetMaps,
     };
 
-  setErro(false);
+  setErro('');
   setDadosPais(novoPais);
 }
 
@@ -59,7 +59,7 @@ export default function App() {
             </Text>
         </Pressable>
         {erro && (
-          <Text style={{color: 'red', textAlign: 'center', fontSize: 18}}>Nome inválido</Text>
+          <Text style={{color: 'red', textAlign: 'center', fontSize: 18}}>{erro}</Text>
         )}
       </View>
       {dadosPais && (
