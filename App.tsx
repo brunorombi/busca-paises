@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { buscaPais, buscaCapital } from './Api';
 import { useState } from 'react';
 
@@ -10,19 +10,31 @@ interface Pais{
   fotoPais: string;
 }
 
+interface Capital{
+  nomeOficial: string;
+  bandeira: string;
+  alt: string;
+}
+
 export default function App() {
-  const [pais, setPais] = useState('');
+  const [busca, setBusca] = useState('');
+  const [modo, setModo] = useState('pais')
+
   const [dadosPais, setDadosPais] = useState<Pais | null>(null);
+  const [dadosCapital, setDadosCapital] = useState<Capital | null>(null);
+
   const [erro, setErro] = useState('');
 
+  console.log(buscaCapital('oslo'));
+
   async function criarPais() {
-    if (!pais) {
+    if (!busca) {
       setErro('Campo vazio');
       setDadosPais(null);
       return;
     }
       
-    const data = await buscaPais(pais);
+    const data = await buscaPais(busca);
 
     if(!data || data.length === 0){
       setDadosPais(null);
@@ -41,18 +53,65 @@ export default function App() {
   setDadosPais(novoPais);
 }
 
+  async function criarCapital() {
+    if (!busca) {
+      setErro('Campo vazio');
+      setDadosCapital(null);
+      return;
+    }
+      
+    const data = await buscaCapital(busca);
+
+    if(!data || data.length === 0){
+      setDadosCapital(null);
+      setErro('Capital não encontrada');
+      return;
+    }
+
+    const novaCapital = {
+      nomeOficial: data[0].name.official,
+      bandeira: data[0].flags.png,
+      alt: data[0].flags.alt
+    };
+
+    setErro('');
+    setDadosCapital(novaCapital);
+  }
+
+  function buscaDados() {
+    if(modo === 'pais') {
+      setDadosCapital(null);
+      criarPais();
+      return;
+    }
+    setDadosPais(null);
+    criarCapital();
+  }
+
   return (
     <View style={styles.container}>
+      <View style={{ flexDirection: 'row', gap: 15, marginBottom: 15 }}>
+        <Pressable onPress={() => setModo('pais')}>
+          <Text style={{ color: modo === 'pais' ? 'blue' : 'black', fontSize: 20 }}>
+            País
+          </Text>
+        </Pressable>
+        <Pressable onPress={() => setModo('capital')}>
+          <Text style={{ color: modo === 'capital' ? 'blue' : 'black', fontSize: 20 }}>
+            Capital
+          </Text>
+        </Pressable>
+      </View>
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
-          placeholder='Digite um país'
-          onChangeText={(pais) => setPais(pais)}
-          value={pais}
+          placeholder={modo === 'pais' ? 'Digite um país' : 'Digite uma capital'}
+          onChangeText={(pais) => setBusca(pais)}
+          value={busca}
         />
         <Pressable
           style={styles.button}
-          onPress={criarPais}>
+          onPress={buscaDados}>
             <Text
               style={styles.buttonText}>
                 Buscar
@@ -76,11 +135,28 @@ export default function App() {
           <Text style={styles.link}>{dadosPais.fotoPais}</Text>
         </View>
       )}
+      {dadosCapital && (
+        <View style={styles.resultado}>
+          <Text style={styles.label}>Nome oficial:</Text>
+          <Text style={styles.titulo}>{dadosCapital.nomeOficial}</Text>
+
+          <Image
+            source={{uri: dadosCapital.bandeira}}
+            alt={dadosCapital.alt}
+            style={styles.bandeira}
+          />
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  bandeira: {
+    width: 200,
+    height: 120,
+    marginTop: 10,
+  },
   button: {
     width: '100%',
     height: 50,
